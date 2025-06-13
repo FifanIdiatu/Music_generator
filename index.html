@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.0/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const App = () => {
+      const [maxVal, setMaxVal] = useState(1.0);
+      const [minVal, setMinVal] = useState(0.0);
+      const [noiseDim, setNoiseDim] = useState(100);
+      const [genre, setGenre] = useState("Classic"); // Новый state для жанра
+      const [status, setStatus] = useState("");
+      const [audioUrl, setAudioUrl] = useState("");
+
+      const generateMusic = async () => {
+        setStatus("Generating...");
+        let adjustedNoiseDim = noiseDim;
+        // Псевдорегулировка noise_dim для разных жанров
+        if (genre === "Rock") adjustedNoiseDim += 20;
+        if (genre === "Jazz") adjustedNoiseDim += 10;
+        const response = await fetch(`/generate_music?max_val=${maxVal}&min_val=${minVal}&noise_dim=${adjustedNoiseDim}`, {
+          method: "POST",
+        });
+        const data = await response.json();
+        setStatus("Done!");
+        setAudioUrl(`/audio`);
+      };
+
+      return (
+        <div className="min-h-screen bg-gradient-to-r from-gray-900 via-gray-800 to-black flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h1 className="text-2xl font-bold mb-4 text-center text-gray-800">Music Generator</h1>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Max Value</label>
+              <input
+                type="number"
+                value={maxVal}
+                onChange={(e) => setMaxVal(parseFloat(e.target.value))}
+                step="0.1"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Min Value</label>
+              <input
+                type="number"
+                value={minVal}
+                onChange={(e) => setMinVal(parseFloat(e.target.value))}
+                step="0.1"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Noise Dimension</label>
+              <input
+                type="number"
+                value={noiseDim}
+                onChange={(e) => setNoiseDim(parseInt(e.target.value))}
+                step="10"
+                min="50"
+                max="200"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Genre</label>
+              <select
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+              >
+                <option value="Classic">Classic</option>
+                <option value="Rock">Rock</option>
+                <option value="Jazz">Jazz</option>
+              </select>
+            </div>
+            <button
+              onClick={generateMusic}
+              className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600"
+            >
+              Generate Music
+            </button>
+            <p className="mt-2 text-center">{status}</p>
+            {audioUrl && (
+              <audio controls className="mt-4 w-full">
+                <source src={audioUrl} type="audio/wav" />
+                Your browser does not support the audio element.
+              </audio>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById("root"));
+  </script>
+</body>
+</html>
